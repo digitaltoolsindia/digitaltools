@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Compress PDF | FormTools India</title>
+  <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 1em;
+      background: #f1f8e9;
+      text-align: center;
+    }
+    h1 {
+      color: #33691e;
+    }
+    input[type="file"] {
+      margin: 1em 0;
+    }
+    .notice {
+      margin-top: 2em;
+      font-size: 0.9em;
+      color: #555;
+    }
+    button {
+      padding: 0.6em 1.2em;
+      background: #aed581;
+      border: none;
+      border-radius: 6px;
+      font-size: 1em;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #9ccc65;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>📉 Compress PDF</h1>
+  <p>Select a PDF file below to compress it in your browser. No data is uploaded.</p>
+
+  <input type="file" id="pdf-upload" accept="application/pdf" />
+  <br />
+  <button onclick="compressPDF()">Compress PDF</button>
+
+  <p class="notice">🔐 Your file is never uploaded or stored. This tool works 100% on your device.</p>
+
+  <script>
+    async function compressPDF() {
+      const fileInput = document.getElementById('pdf-upload');
+      if (!fileInput.files.length) return alert("Please select a PDF file");
+
+      const file = fileInput.files[0];
+      const arrayBuffer = await file.arrayBuffer();
+      const pdfDoc = await PDFLib.PDFDocument.load(arrayBuffer);
+
+      const newPdf = await PDFLib.PDFDocument.create();
+      const copiedPages = await newPdf.copyPages(pdfDoc, pdfDoc.getPageIndices());
+
+      copiedPages.forEach((page) => {
+        // Downscale each page
+        const scale = 0.9; // compress quality
+        const { width, height } = page.getSize();
+        page.setSize(width * scale, height * scale);
+        newPdf.addPage(page);
+      });
+
+      const pdfBytes = await newPdf.save();
+
+      const blob = new Blob([pdfBytes], { type: "application/pdf" });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = "compressed.pdf";
+      link.click();
+    }
+  </script>
+
+</body>
+</html>
