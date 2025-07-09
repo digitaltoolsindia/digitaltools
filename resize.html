@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Resize Image | FormTools India</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #fff3e0;
+      text-align: center;
+      padding: 2em;
+    }
+    h1 {
+      color: #e65100;
+    }
+    input, select, button {
+      margin: 1em;
+      padding: 0.6em;
+      font-size: 1em;
+    }
+    .notice {
+      font-size: 0.9em;
+      color: #555;
+      margin-top: 2em;
+    }
+    canvas {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>🖼️ Resize Image</h1>
+  <p>Select your image and choose desired size (in KB).</p>
+
+  <input type="file" id="imageInput" accept="image/*"><br>
+  <label for="targetSize">Target Size:</label>
+  <select id="targetSize">
+    <option value="20">20 KB</option>
+    <option value="50">50 KB</option>
+    <option value="custom">Custom</option>
+  </select>
+  <input type="number" id="customSize" placeholder="Enter KB" style="display:none;" />
+
+  <br>
+  <button onclick="resizeImage()">Resize</button>
+
+  <p class="notice">🔐 100% private – your image stays on your device.</p>
+
+  <canvas id="canvas"></canvas>
+
+  <script>
+    const targetSelect = document.getElementById('targetSize');
+    const customInput = document.getElementById('customSize');
+
+    targetSelect.addEventListener('change', () => {
+      customInput.style.display = targetSelect.value === 'custom' ? 'inline-block' : 'none';
+    });
+
+    function resizeImage() {
+      const fileInput = document.getElementById('imageInput');
+      const canvas = document.getElementById('canvas');
+      const ctx = canvas.getContext('2d');
+
+      if (!fileInput.files.length) return alert("Please select an image");
+
+      const file = fileInput.files[0];
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+
+      reader.onload = function(event) {
+        const img = new Image();
+        img.src = event.target.result;
+
+        img.onload = function() {
+          let width = img.width;
+          let height = img.height;
+          canvas.width = width;
+          canvas.height = height;
+          ctx.drawImage(img, 0, 0, width, height);
+
+          let targetKB = targetSelect.value === 'custom' 
+            ? parseInt(customInput.value || 50) 
+            : parseInt(targetSelect.value);
+          let quality = 0.9;
+
+          function tryCompress() {
+            const dataUrl = canvas.toDataURL('image/jpeg', quality);
+            const sizeInKB = Math.round((dataUrl.length * 3) / 4 / 1024);
+            if (sizeInKB > targetKB && quality > 0.1) {
+              quality -= 0.05;
+              tryCompress();
+            } else {
+              const link = document.createElement("a");
+              link.download = "resized.jpg";
+              link.href = dataUrl;
+              link.click();
+            }
+          }
+
+          tryCompress();
+        };
+      };
+    }
+  </script>
+
+</body>
+</html>
